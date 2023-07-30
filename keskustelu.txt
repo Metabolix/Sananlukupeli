@@ -1,0 +1,655 @@
+User
+Haluaisin tehdä HTML:llä ja JS:llä opetuspelin, joka lukee ääneen sanoja. Tallennan sanat tekstitiedostona (sanat.txt), yksi sana per rivi. Sivun pitäisi hakea tämä tiedosto. Sivun pitäisi näyttää ja lukea Web Speech API:lla yksi sana kerrallaan ja vaikka jostain painikkeesta vaihtaa seuraavaan sanaan.  Sivun pitäisi laittaa jokainen sanan kirjain omaan span-elementtiin, ja kun näitä klikkaa, sivu lukisi kyseisen kirjaimen.
+ChatGPT
+
+Tässä on yksinkertainen esimerkki HTML- ja JavaScript-koodista, joka toteuttaa opetuspelin, joka lukee ääneen sanoja tekstitiedostosta. Koodi käyttää Web Speech API:ta sanojen ääneen lukemiseen ja kirjainten lukemiseen erillisistä span-elementeistä.
+
+HTML-koodi (index.html):
+
+html
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Opetuspeli</title>
+</head>
+<body>
+  <h1>Opetuspeli</h1>
+  <div id="wordContainer"></div>
+  <button onclick="nextWord()">Seuraava sana</button>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+JavaScript-koodi (script.js):
+
+javascript
+
+// Funktio lukee ääneen annetun tekstin
+function speak(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  speechSynthesis.speak(utterance);
+}
+
+// Funktio luo span-elementin kutakin kirjainta varten
+function createLetterSpans(word) {
+  const wordContainer = document.getElementById('wordContainer');
+  wordContainer.innerHTML = ''; // Tyhjennä kontaineri
+
+  for (let i = 0; i < word.length; i++) {
+    const span = document.createElement('span');
+    span.textContent = word[i];
+    span.addEventListener('click', function() {
+      speak(span.textContent);
+    });
+    wordContainer.appendChild(span);
+  }
+}
+
+// Funktio hakee seuraavan sanan tekstitiedostosta
+function nextWord() {
+  fetch('sanat.txt')
+    .then(response => response.text())
+    .then(data => {
+      const words = data.split('\n').filter(word => word !== '');
+      const randomIndex = Math.floor(Math.random() * words.length);
+      const word = words[randomIndex];
+      createLetterSpans(word);
+      speak(word);
+    })
+    .catch(error => {
+      console.error('Virhe tiedoston lataamisessa:', error);
+    });
+}
+
+Tallenna tiedostot (index.html ja script.js) samaan kansioon ja luo myös tekstitiedosto nimeltä "sanat.txt", jossa on yksi sana per rivi.
+
+Kun avaat index.html-sivun selaimessa, se lataa tekstitiedoston, valitsee satunnaisen sanan ja luo span-elementit kunkin kirjaimen ympärille. Voit klikata kirjaimia kuullaksesi ne ääneen. Voit myös käyttää "Seuraava sana" -painiketta vaihtaaksesi seuraavaan sanaan.
+
+Huomaa, että tämä on hyvin yksinkertainen esimerkki, eikä se kata kaikkia mahdollisia virheiden käsittelyjä.
+User
+Voisitko näyttää CSS-koodin, jolla wordContainer näytetään isolla fontilla ja klikkausosoittimella ja kirjainten välistys on vähän suurempi?
+ChatGPT
+
+Tietysti! Tässä on CSS-koodi, jolla voit muokata wordContainer-elementin ulkoasua isolla fontilla, klikkausosoittimella ja suuremmalla kirjainten välistyksellä:
+
+css
+
+#wordContainer {
+  font-size: 24px;
+  cursor: pointer;
+  letter-spacing: 3px;
+}
+
+Voit lisätä tämän CSS-koodin HTML-tiedoston <head>-osioon lisäämällä seuraavan <style>-elementin:
+
+html
+
+<head>
+  <meta charset="UTF-8">
+  <title>Opetuspeli</title>
+  <style>
+    #wordContainer {
+      font-size: 24px;
+      cursor: pointer;
+      letter-spacing: 3px;
+    }
+  </style>
+</head>
+
+Tämä CSS-koodi asettaa wordContainer-elementin fontin koon 24 pikseliin, antaa sille kursoriksi osoittimen ilmaistakseen, että se on klikattava, ja lisää kirjainten välistykseksi 3 pikseliä. Voit muuttaa näitä arvoja tarpeidesi mukaan saadaksesi haluamasi ulkoasun.
+User
+Kun kirjainta painetaan, haluaisin, että se näytetään 1 sekunnin ajan jollain värillä. Värikoodi luodaan muuttamalla satunnaisluku hex-muotoon.
+ChatGPT
+
+Voit lisätä seuraavan JavaScript-koodin createLetterSpans-funktioon, jotta kirjaimen painaminen aiheuttaa sen näkymisen värikoodin avulla sekunnin ajan:
+
+javascript
+
+// Funktio luo span-elementin kutakin kirjainta varten
+function createLetterSpans(word) {
+  const wordContainer = document.getElementById('wordContainer');
+  wordContainer.innerHTML = ''; // Tyhjennä kontaineri
+
+  for (let i = 0; i < word.length; i++) {
+    const span = document.createElement('span');
+    span.textContent = word[i];
+    span.addEventListener('click', function() {
+      // Generoi satunnainen värikoodi hex-muodossa
+      const color = getRandomColorCode();
+      span.style.color = color;
+
+      // Aseta väri takaisin alkuperäiseksi 1 sekunnin kuluttua
+      setTimeout(function() {
+        span.style.color = '';
+      }, 1000);
+
+      speak(span.textContent);
+    });
+    wordContainer.appendChild(span);
+  }
+}
+
+// Apufunktio satunnaisen värikoodin generoimiseen hex-muodossa
+function getRandomColorCode() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+Tämä koodi lisää värin kirjaimelle, kun sitä painetaan. getRandomColorCode-funktio generoi satunnaisen värikoodin hex-muodossa. Väri asetetaan kirjaimen style.color-ominaisuuteen, ja 1 sekunnin kuluttua setTimeout-funktion avulla väri palautetaan takaisin alkuperäiseksi (tyhjäksi). Tämä luo efektin, jossa kirjain näkyy värikkäänä hetken ajan painamisen jälkeen.
+
+Huomaa, että värikoodi generoidaan satunnaisesti jokaisen kirjaimen painamisen yhteydessä, joten väri vaihtelee jokaisella painalluksella. Voit muokata getRandomColorCode-funktiota tai käyttää muita värin generointimenetelmiä saadaksesi haluamasi visuaalisen efektin.
+User
+Voitko näyttää yhden rivin koodin, jossa luodaan suoraan 6-numeroinen heksaluku Math.randomin avulla?
+ChatGPT
+
+Tietenkin! Tässä on yhden rivin koodi, jolla voit luoda suoraan 6-numeroisen heksaluvun Math.random()-funktion avulla:
+
+javascript
+
+const hexColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+
+Tämä koodi käyttää Math.random()-funktiota luomaan satunnaisen desimaaliluvun väliltä 0 (mukaan lukien) ja 1 (pois lukien). Tämän jälkeen luku kerrotaan 16777215:llä, joka on suurin heksadesimaaliesityksessä oleva luku kuudella merkillä (FFFFFF heksalukuna).
+
+Käytämme Math.floor()-funktiota pyöristämään luvun alaspäin ja toString(16)-metodia muuttamaan sen heksadesimaalimuotoon. Lopuksi käytämme padStart(6, '0')-metodia varmistaaksemme, että heksaluvulla on aina kuusi merkkiä, lisäämällä tarvittaessa etunollia.
+
+Tämä koodi luo satunnaisen kuusinumeroisen heksaluvun muuttujaan hexColor. Voit käyttää tätä muuttujaa haluamallasi tavalla, esimerkiksi värikoodina tai muihin tarkoituksiin.
+User
+Haluaisin sittenkin tekstille värin sijaista varjon, joka on suoraan tekstin takana ja hieman blurrattu.
+ChatGPT
+
+Totta kai! Voit luoda varjon tekstin takana käyttämällä CSS:n text-shadow -ominaisuutta. Voit myös lisätä hieman bluria varjoon käyttämällä blur()-funktiota. Tässä on esimerkki CSS-koodista, jolla luot tällaisen varjon:
+
+css
+
+#wordContainer span {
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+Lisää tämä CSS-koodi HTML-tiedoston <head>-osioon <style>-elementin sisälle:
+
+html
+
+<head>
+  <meta charset="UTF-8">
+  <title>Opetuspeli</title>
+  <style>
+    #wordContainer span {
+      text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+
+Tässä koodissa text-shadow-ominaisuuden arvo on 0 0 5px rgba(0, 0, 0, 0.5). Ensimmäiset kaksi nollaa määrittävät varjon siirtymän x- ja y-akseleilla, joten varjo sijaitsee suoraan tekstin takana. 5px määrittää varjon leveyden ja rgba(0, 0, 0, 0.5) määrittää varjon värin. RGBA-arvo (punainen, vihreä, sininen, läpinäkyvyys) rgba(0, 0, 0, 0.5) edustaa mustaa väriä, jossa läpinäkyvyys on 0,5. Voit säätää näitä arvoja tarpeidesi mukaan saadaksesi halutun varjon ulkoasun.
+User
+Voitko tehdä CSS-koodit: Haluan wordContaineriin tekstin kooksi 4em, kirjainväliksi 0.1em, pystysuunnan marginaaliksi 1em, ja button-elementille fontin kooksi 1.5em, täytettä 1em ja pystymarginaalia 1em. Lisäksi haluan body-elementtiin tekstin keskityksen.
+ChatGPT
+
+Tässä on päivitetty CSS-koodi, joka sisältää pyyntösi mukaiset muutokset:
+
+css
+
+body {
+  text-align: center;
+}
+
+#wordContainer {
+  font-size: 4em;
+  letter-spacing: 0.1em;
+  margin-top: 1em;
+}
+
+button {
+  font-size: 1.5em;
+  padding: 1em;
+  margin-top: 1em;
+}
+
+Lisää tämä CSS-koodi HTML-tiedoston <head>-osioon <style>-elementin sisälle:
+
+html
+
+<head>
+  <meta charset="UTF-8">
+  <title>Opetuspeli</title>
+  <style>
+    body {
+      text-align: center;
+    }
+
+    #wordContainer {
+      font-size: 4em;
+      letter-spacing: 0.1em;
+      margin-top: 1em;
+    }
+
+    button {
+      font-size: 1.5em;
+      padding: 1em;
+      margin-top: 1em;
+    }
+  </style>
+</head>
+
+Tässä CSS-koodissa body-elementille asetetaan text-align: center, joka keskittää tekstin ruudun keskelle.
+
+#wordContainer-elementille annetaan fontin kooksi 4em (neljä kertaa suurempi kuin perusfontin koko), kirjainväliksi 0.1em ja pystysuuntaiseksi marginaaliksi 1em.
+
+button-elementille annetaan fontin kooksi 1.5em, täytteeksi 1em ja pystysuuntaiseksi marginaaliksi 1em.
+
+Voit muuttaa näitä arvoja tarpeidesi mukaan, jotta saat haluamasi ulkoasun.
+User
+Millä CSS-koodirivillä saa marginaalin sekä ylös että alas?
+ChatGPT
+
+Voit käyttää CSS-koodiriviä margin määrittääksesi marginaalin sekä ylös että alas. Marginaalin voi määrittää neljällä erillisellä arvolla, jotka määrittävät marginaalin ylös, oikealle, alas ja vasemmalle. Tässä on esimerkki koodista, jolla asetat saman marginaalin sekä ylös että alas:
+
+css
+
+#elementti {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+Tässä esimerkissä 1em on marginaalin arvo. Ensimmäinen rivi margin-top asettaa marginaalin ylös päin, kun taas toinen rivi margin-bottom asettaa marginaalin alas päin. Voit muuttaa 1em arvoa haluamaksesi.
+
+Voit myös käyttää yhtä yhdistettyä margin-ominaisuuden riviä, jossa ensimmäinen arvo on ylösmenevä marginaali ja toinen arvo on alasmenevä marginaali. Tässä on esimerkki:
+
+css
+
+#elementti {
+  margin: 1em 0;
+}
+
+Tässä esimerkissä 1em on marginaalin arvo sekä ylös että alas. Nolla (0) tarkoittaa, että marginaalia ei ole asetettu oikealle tai vasemmalle.
+
+Valitse itsellesi sopivampi vaihtoehto ja muokkaa arvoja tarpeidesi mukaan.
+User
+Haluaisin, että fetch epäonnistuu, jos tiedostoa ei löydy. Miten tämä tarkistetaan?
+ChatGPT
+
+Voit tarkistaa, epäonnistuuko fetch-pyyntö, tarkistamalla vastauksen ok-ominaisuuden arvon. Jos ok on false, se tarkoittaa, että pyyntö epäonnistui (esimerkiksi tiedostoa ei löytynyt). Tässä on esimerkki, miten voit tehdä tämän tarkistuksen:
+
+javascript
+
+fetch('sanat.txt')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Tiedoston lataaminen epäonnistui');
+    }
+    return response.text();
+  })
+  .then(data => {
+    // Käsittely onnistuneen vastauksen tapauksessa
+    console.log(data);
+  })
+  .catch(error => {
+    // Käsittely epäonnistuneen vastauksen tapauksessa
+    console.error(error);
+  });
+
+Tässä koodissa fetch-pyyntö palauttaa response-objektin. Tarkistamme response.ok-ominaisuuden arvon. Jos se on false, heitetään Error-poikkeus, joka siirtyy catch-lohkon käsiteltäväksi.
+
+Voit käsitellä onnistuneen vastauksen then-lohkon sisällä ja epäonnistuneen vastauksen catch-lohkon sisällä. Onnistuneen vastauksen tapauksessa voit käsitellä vastausta (data), kun taas epäonnistuneen vastauksen tapauksessa voit käsitellä virheen (error).
+
+Huomaa, että tämä tarkistaa vain, epäonnistuuko fetch-pyyntö itsessään, eikä tarkista tiedoston olemassaoloa palvelimella. Palvelimen tulee vastata HTTP-tilakoodilla 404, jotta response.ok olisi false, jos tiedostoa ei löydy.
+User
+Pitäisi vielä saada puheeseen (utterance) suomen kieli valittua.
+ChatGPT
+
+Valitettavasti Web Speech API ei tue suomen kieltä (FI) suoraan. Web Speech API:n puhenopeuden, puhenuotin ja puheen tunnistamisen kielet vaihtelevat eri selainten ja käyttöjärjestelmien välillä, mutta suomi ei ole yleisesti tuettu kieli.
+
+Voit tarkistaa tuetut kielet selaimen konsolista seuraavalla JavaScript-koodilla:
+
+javascript
+
+console.log(window.speechSynthesis.getVoices());
+
+Tämä koodi tulostaa konsoliin käytettävissä olevat äänipaketit ja niiden tuetut kielet. Voit tarkistaa, onko suomen kieli (FI) saatavilla omassa ympäristössäsi.
+
+Jos suomen kieli ei ole tuettu, voit harkita muita vaihtoehtoja, kuten käyttää kolmannen osapuolen puheentunnistus- tai teksti puheeksi -palvelua, joka tukee suomen kieltä. Tällaisia palveluja ovat esimerkiksi Google Cloud Text-to-Speech, Microsoft Azure Speech Services tai IBM Watson Text-to-Speech. Nämä palvelut tarjoavat kattavamman valikoiman tukemia kieliä, mukaan lukien suomen kielen.
+
+Sinun täytyy rekisteröityä kyseisiin palveluihin, saada API-avain ja noudattaa niiden dokumentaatiota ja käyttöehtoja lisätietoja ja integraatio-ohjeita varten.
+User
+Miten saisin getVoices()-funktion palauttamasta listasta etsittyä objektin, jonka kieli (lang) on "fi"?
+ChatGPT
+
+Voit käyttää getVoices()-funktiota palauttamaan käytettävissä olevat äänipaketit ja niiden tiedot. Voit sitten etsiä halutun objektin, jonka kieli (lang) on "fi", käyttämällä esimerkiksi Array.prototype.find()-funktiota. Tässä on esimerkki koodista, joka etsii äänipaketin, jonka kieli on "fi":
+
+javascript
+
+// Odota, että äänipaketit on ladattu
+window.speechSynthesis.onvoiceschanged = function() {
+  // Hae käytettävissä olevat äänipaketit
+  var voices = window.speechSynthesis.getVoices();
+
+  // Etsi äänipaketti, jonka kieli on "fi"
+  var fiVoice = voices.find(function(voice) {
+    return voice.lang === 'fi';
+  });
+
+  if (fiVoice) {
+    // Haluttu äänipaketti löytyi
+    console.log(fiVoice);
+  } else {
+    // Haluttua äänipakettia ei löytynyt
+    console.log('Suomenkielistä äänipakettia ei löytynyt.');
+  }
+};
+
+Tässä koodissa onvoiceschanged-tapahtumankäsittelijä odottaa, että äänipaketit on ladattu. Sen jälkeen getVoices()-funktiolla haetaan käytettävissä olevat äänipaketit. find()-funktion avulla etsitään äänipaketti, jonka kieli (lang) on "fi". Jos haluttu äänipaketti löytyy, se tulostetaan konsoliin. Muussa tapauksessa tulostetaan ilmoitus siitä, että suomenkielistä äänipakettia ei löytynyt.
+
+Huomaa, että getVoices()-funktio saattaa palauttaa äänipaketteja asynkronisesti, joten on tärkeää käyttää onvoiceschanged-tapahtumaa varmistaaksesi, että äänipaketit ovat käytettävissä ennen niiden käsittelyä.
+User
+Minulla on lista toivotuista kielistä (languages), miten voisin etsiä näille kaikille voicen ja valita sitten ensimmäisen, jolle voice löytyi?
+ChatGPT
+
+Voit käyttää Array.prototype.find()-funktiota etsimään haluttuja kieliä vastaavat äänipaketit. Sen jälkeen voit valita ensimmäisen löydetyistä äänipaketeista. Tässä on esimerkkikoodi, joka etsii ensimmäisen äänipaketin, joka vastaa toivottuja kieliä:
+
+javascript
+
+// Odota, että äänipaketit on ladattu
+window.speechSynthesis.onvoiceschanged = function() {
+  // Hae käytettävissä olevat äänipaketit
+  var voices = window.speechSynthesis.getVoices();
+
+  // Lista toivotuista kielistä
+  var languages = ['fi', 'en', 'es']; // Esimerkki toivotuista kielistä
+
+  // Etsi ensimmäinen äänipaketti, joka vastaa toivottua kieltä
+  var selectedVoice = voices.find(function(voice) {
+    return languages.includes(voice.lang);
+  });
+
+  if (selectedVoice) {
+    // Haluttu äänipaketti löytyi
+    console.log(selectedVoice);
+  } else {
+    // Haluttuja äänipaketteja ei löytynyt
+    console.log('Haluttuja äänipaketteja ei löytynyt.');
+  }
+};
+
+Tässä koodissa languages on lista toivotuista kielistä, esimerkkinä ['fi', 'en', 'es']. find()-funktion avulla etsitään ensimmäinen äänipaketti, jonka kieli (lang) vastaa jotakin toivotuista kielistä languages-listassa. Jos haluttu äänipaketti löytyy, se tulostetaan konsoliin. Muussa tapauksessa tulostetaan ilmoitus siitä, että haluttuja äänipaketteja ei löytynyt.
+
+Huomaa, että tässä esimerkissä find()-funktio palauttaa ainoastaan ensimmäisen löydetyn äänipaketin, joka vastaa toivottua kieltä. Jos haluat löytää kaikki vastaavat äänipaketit, voit käyttää Array.prototype.filter()-funktiota sen sijaan find()-funktion sijaan.
+User
+Mihin tämä selectedVoice pitäisi laittaa, jotta puhe tulee sillä kielellä?
+ChatGPT
+
+Valittu äänipaketti (selectedVoice) tulee asettaa SpeechSynthesisUtterance-objektille, jotta puhe tulee halutulla kielellä. Tässä on esimerkki koodista, joka käyttää valittua äänipakettia puheen generoimiseen:
+
+javascript
+
+// Luodaan puheen generointiin tarvittava objekti
+var utterance = new SpeechSynthesisUtterance('Tervetuloa');
+
+// Asetetaan valittu äänipaketti puheen generointiin
+utterance.voice = selectedVoice;
+
+// Käynnistetään puheen generointi
+window.speechSynthesis.speak(utterance);
+
+Tässä koodissa selectedVoice on valittu äänipaketti, jonka olet löytänyt. SpeechSynthesisUtterance-objekti utterance luodaan annetulla tekstillä 'Tervetuloa'. Sitten asetetaan utterance.voice-ominaisuudeksi valittu äänipaketti. Lopuksi puhe käynnistetään window.speechSynthesis.speak(utterance)-kutsulla.
+
+Näin puhe generoidaan ja toistetaan valitulla äänipaketilla. Varmista, että selectedVoice-muuttuja on määritelty ja sisältää halutun äänipaketin ennen utterance.voice-ominaisuuden asettamista.
+User
+Miten löytäisin listani kutakin kieltä vastaavan äänen getVoices()-listasta? Ilmeisesti pitäisi myöskin vertailla vain kielen alkua, koska listassani on esim. "fi" mutta getVoices()-listassa saattaa olla vaikka "fi-FI".
+ChatGPT
+
+Voit vertailla äänipakettien kieltä alkuperäisen kielikoodin kanssa ja etsiä sopivan äänipaketin. Voit käyttää startsWith()-metodia vertailemaan kielen alkua. Tässä on esimerkkikoodi, joka etsii jokaiselle listassa olevalla kielelle vastaavan äänipaketin:
+
+javascript
+
+// Odota, että äänipaketit on ladattu
+window.speechSynthesis.onvoiceschanged = function() {
+  // Hae käytettävissä olevat äänipaketit
+  var voices = window.speechSynthesis.getVoices();
+
+  // Lista toivotuista kielistä
+  var languages = ['fi', 'en', 'es']; // Esimerkki toivotuista kielistä
+
+  // Etsi äänipaketti kullekin kielelle
+  var selectedVoices = languages.map(function(language) {
+    return voices.find(function(voice) {
+      return voice.lang.startsWith(language);
+    });
+  });
+
+  // Käsittele valitut äänipaketit
+  selectedVoices.forEach(function(selectedVoice, index) {
+    if (selectedVoice) {
+      console.log('Kieli:', languages[index]);
+      console.log('Äänipaketti:', selectedVoice);
+    } else {
+      console.log('Kieltä', languages[index], 'ei löytynyt');
+    }
+  });
+};
+
+Tässä koodissa languages on lista toivotuista kielistä, esimerkiksi ['fi', 'en', 'es']. map()-funktiolla käydään läpi jokainen kieli languages-listassa ja find()-funktiolla etsitään äänipaketti, jonka kieli (lang) alkaa halutulla kielikoodilla. startsWith()-metodia käytetään tarkistamaan, onko äänipaketin kieli alkuperäisen kielikoodin alku.
+
+Kun valitut äänipaketit on etsitty, niitä voidaan käsitellä forEach()-funktiolla. Jos löydetään sopiva äänipaketti, se tulostetaan konsoliin. Muussa tapauksessa tulostetaan ilmoitus, että kieltä ei löytynyt.
+
+Huomaa, että tämä lähestymistapa käyttää kielen alkua vertailuun, joten se voi sopivasti löytää äänipaketin, joka vastaa alkuperäistä kielikoodia.
+User
+Millä koodirivillä saan laitettua puheen kieleksi lang-arvon ensimmäisestä ei-tyhjästä selectedVoices-taulukon elementistä?
+ChatGPT
+
+Voit asettaa puheen kieleksi lang-ominaisuuden ensimmäisen ei-tyhjän selectedVoices-taulukon elementin lang-arvosta. Tässä on esimerkkikoodi, joka tekee tämän:
+
+javascript
+
+// Valitse ensimmäinen ei-tyhjä äänipaketti selectedVoices-taulukosta
+var selectedVoice = selectedVoices.find(function(voice) {
+  return voice !== null;
+});
+
+if (selectedVoice) {
+  // Aseta puheen kieli valitun äänipaketin lang-arvoksi
+  utterance.lang = selectedVoice.lang;
+} else {
+  console.log('Äänipaketteja ei löytynyt valituille kielille.');
+}
+
+Kun olet valinnut äänipaketin selectedVoice, voit asettaa puheen kielen utterance-objektille asettamalla utterance.lang-ominaisuuden valitun äänipaketin lang-arvoksi. Huomaa, että tämä olettaa, että utterance-objekti on määritelty ja sinulla on sopivat äänipaketit selectedVoices-taulukossa.
+
+Tämän jälkeen voit käynnistää puheen kuten aiemmin:
+
+javascript
+
+window.speechSynthesis.speak(utterance);
+
+Tällä tavalla asetat puheen kielen valitun äänipaketin lang-arvoksi ja saat puheen esitettyä halutulla kielellä.
+User
+Miten puheen nopeutta muutetaan?
+ChatGPT
+
+Puheen nopeutta voidaan säätää SpeechSynthesisUtterance-objektin rate-ominaisuuden avulla. Oletusarvoisesti rate on asetettu arvoon 1.0, joka edustaa normaalia puhetta. Voit muuttaa tätä arvoa saadaksesi hitaampaa tai nopeampaa puhetta. Esimerkiksi, arvo 2.0 nopeuttaa puhetta kaksinkertaiseksi, kun taas arvo 0.5 hidastaa puhetta puoleen normaalista. Tässä on esimerkki koodista, joka muuttaa puheen nopeutta:
+
+javascript
+
+var utterance = new SpeechSynthesisUtterance('Tervetuloa');
+
+// Aseta puheen nopeus (rate)
+utterance.rate = 0.5; // Hidasta puhetta puoleen normaalista
+
+// Käynnistä puheen generointi
+window.speechSynthesis.speak(utterance);
+
+Tässä koodissa utterance.rate-ominaisuus asetetaan arvoon 0.5 hidastaaksesi puhetta puoleen normaalista nopeudesta. Voit kokeilla eri arvoja, kuten 1.0, 2.0 tai muita, riippuen siitä, minkä nopeuden haluat saavuttaa.
+
+Huomaa, että rate-ominaisuuden arvo voi vaihdella eri selainten ja käyttöjärjestelmien välillä, joten tarkista selaimen dokumentaatiosta, mitkä arvot ovat tuettuja ja miten niitä voi käyttää.
+User
+Haluaisin muuttaa pelin toimintaa siten, että kun sanaa klikataan, luetaan järjestyksessä kaikki sanan kirjaimet (ja korostetaan aina luettava kirjain) ja sen jälkeen luetaan vielä koko sana uudestaan.
+ChatGPT
+
+Voit lisätä uuden toiminnallisuuden peliin, jotta kun sanaa klikataan, ensin luetaan kaikki sanan kirjaimet järjestyksessä yksitellen ja korostetaan luettava kirjain. Sen jälkeen luetaan koko sana uudestaan. Tässä on esimerkkikoodi, joka toteuttaa tämän:
+
+javascript
+
+// Lisää klikkaustapahtumankäsittelijä jokaiselle kirjainspanille
+wordContainer.addEventListener('click', function(event) {
+  var target = event.target;
+  if (target.tagName === 'SPAN') {
+    // Luetaan kirjaimet järjestyksessä yksitellen ja korostetaan luettava kirjain
+    var word = target.textContent;
+    var letters = word.split('');
+    letters.forEach(function(letter, index) {
+      setTimeout(function() {
+        target.style.color = 'red'; // Korosta luettava kirjain punaisella
+        speak(letter); // Lue kirjain
+        target.style.color = ''; // Poista korostus
+      }, index * 500); // Aseta aikaviive seuraavan kirjaimen lukemiselle
+    });
+
+    // Lukitse kirjainspannit, jotta niitä ei voi klikata uudestaan
+    var spans = wordContainer.querySelectorAll('span');
+    spans.forEach(function(span) {
+      span.style.pointerEvents = 'none';
+    });
+
+    // Lukemisen jälkeen lue koko sana uudestaan
+    setTimeout(function() {
+      speak(word);
+    }, letters.length * 500);
+  }
+});
+
+Tässä koodissa lisätään click-tapahtumankäsittelijä wordContainer-elementille. Kun jokin kirjainspani (<span>) klikataan, käsitellään kirjainten lukeminen ja korostaminen yksitellen. setTimeout-funktiota käytetään luomaan aikaviive jokaiselle kirjaimelle, jotta ne luetaan yksitellen järjestyksessä. speak-funktiota käytetään lukemaan kirjain ääneen, ja sen jälkeen korostus poistetaan.
+
+Lisäksi setTimeout-funktiolla asetetaan aikaviive lukemisen jälkeen, jotta koko sana luetaan uudestaan. Kirjainspannit lukitaan (pointerEvents = 'none'), jotta niitä ei voi klikata uudelleen kirjainten lukemisen aikana.
+
+Huomaa, että tässä esimerkissä oletetaan, että speak-funktio on jo toteutettu ja se lukee annetun tekstin ääneen. Voit käyttää aiempaa speak-funktion toteutusta tai korvata sen haluamallasi äänenlukemismenetelmällä.
+User
+Voiko lukemisen päättymisen tunnistaa jollain eventillä, jotta ei tarvitsisi käyttää timeoutia?
+ChatGPT
+
+Valitettavasti Web Speech API ei tarjoa suoraa tapaa tunnistaa, milloin puheen lukeminen on valmis. Tämän vuoksi setTimeout-funktion käyttäminen aikaviiveen asettamiseksi on yleinen tapa toteuttaa puheen lukemisen päättymisen tunnistaminen.
+
+Kuitenkin voit kuunnella speechend-tapahtumaa SpeechSynthesisUtterance-objektilla, joka laukaistaan, kun puheen lukeminen päättyy. Tässä on esimerkkikoodi, joka näyttää, miten voit käyttää speechend-tapahtumaa:
+
+javascript
+
+// Luodaan puheen generointiin tarvittava objekti
+var utterance = new SpeechSynthesisUtterance('Tervetuloa');
+
+// Kuuntele speechend-tapahtumaa
+utterance.addEventListener('speechend', function() {
+  console.log('Puheen lukeminen päättyi');
+  // Tässä voit suorittaa haluamasi toiminnot, kun puheen lukeminen päättyy
+});
+
+// Käynnistetään puheen generointi
+window.speechSynthesis.speak(utterance);
+
+Tässä koodissa speechend-tapahtuma kuunnellaan utterance-objektissa, joka laukaistaan, kun puheen lukeminen päättyy. Voit lisätä haluamasi toiminnot tapahtumankäsittelijässä, kun puheen lukeminen on päättynyt.
+
+On tärkeää huomata, että speechend-tapahtuma voi olla hieman epäluotettava eri selainten ja käyttöjärjestelmien välillä. Jotkut selaimet voivat laukaista tapahtuman liian aikaisin tai jättää sen laukaisematta tietyissä tilanteissa. Siksi setTimeout-ratkaisu voi olla edelleen luotettavampi tapa hallita puheen lukemisen päättymistä.
+User
+Voisiko ominaisuutta SpeechSynthesis.speaking käyttää tähän?
+ChatGPT
+
+Kyllä, voit käyttää SpeechSynthesis-rajapinnan speaking-ominaisuutta tarkistaaksesi, onko puheenlukeminen käynnissä. Voit käyttää tätä ominaisuutta päättämään, milloin puheen lukeminen on valmis. Tässä on esimerkkikoodi, joka näyttää, miten voit käyttää speaking-ominaisuutta:
+
+javascript
+
+// Luodaan puheen generointiin tarvittava objekti
+var utterance = new SpeechSynthesisUtterance('Tervetuloa');
+
+// Käynnistetään puheen generointi
+window.speechSynthesis.speak(utterance);
+
+// Kuunnellaan äänteen lopettamista
+var checkSpeakingInterval = setInterval(function() {
+  if (!window.speechSynthesis.speaking) {
+    console.log('Puheen lukeminen päättyi');
+    // Tässä voit suorittaa haluamasi toiminnot, kun puheen lukeminen päättyy
+
+    // Pysäytä tarkistusväli
+    clearInterval(checkSpeakingInterval);
+  }
+}, 100);
+
+Tässä koodissa käytetään setInterval-funktiota toistuvan tarkistusvälin luomiseksi, joka tarkistaa window.speechSynthesis.speaking-ominaisuuden tilan. Jos speaking on false, se tarkoittaa, että puheen lukeminen on päättynyt. Voit suorittaa haluamasi toiminnot tässä kohdassa ja sitten pysäyttää tarkistusväli clearInterval-funktiolla.
+
+Huomaa, että tarkistusväli on asetettu tarkistamaan speaking-tilaa tietyin väliajoin (tässä esimerkissä 100 millisekuntia). Voit muuttaa väliaikaa tarpeidesi mukaan, mutta älä aseta sitä liian pieneksi, jotta vältät liiallisen tarkistamisen ja suorituskyvyn ongelmat.
+User
+Ilmeisesti utterance.onend kertoisi myös puheen päättymisestä, joten voisiko speak-funktiosta tehdä asynkronisen siten, että funktio palauttaisi vasta, kun utterance.onend tapahtuu?
+ChatGPT
+
+Kyllä, voit toteuttaa speak-funktion asynkronisena siten, että se palauttaa vasta, kun utterance.onend-tapahtuma laukeaa, eli puheen lukeminen päättyy. Tämä voidaan saavuttaa käyttämällä Promise-objektia. Tässä on esimerkkikoodi, joka näyttää, miten voit toteuttaa tämän:
+
+javascript
+
+function speak(text) {
+  return new Promise(function(resolve, reject) {
+    var utterance = new SpeechSynthesisUtterance(text);
+
+    utterance.onend = function() {
+      resolve();
+    };
+
+    utterance.onerror = function(event) {
+      reject(event.error);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  });
+}
+
+Tässä speak-funktiossa luodaan Promise-objekti, joka palautetaan. utterance.onend-tapahtumankäsittelijä laukaisee resolve()-funktion, kun puheen lukeminen päättyy onnistuneesti. Jos tapahtuu virhe utterance.onerror-tapahtumassa, reject()-funktio kutsutaan virheen välittämiseksi.
+
+Kun käytät speak-funktiota, voit odottaa sen valmistumista async/await-avainsanojen avulla tai käyttämällä then()- ja catch()-metodeja. Tässä on esimerkki:
+
+javascript
+
+async function someFunction() {
+  try {
+    await speak('Tervetuloa');
+    console.log('Puheen lukeminen päättyi');
+    // Tässä voit suorittaa haluamasi toiminnot, kun puheen lukeminen päättyy
+  } catch (error) {
+    console.error('Virhe puheen lukemisessa:', error);
+  }
+}
+
+someFunction();
+
+Huomaa, että speak-funktion käyttö edellyttää, että koodisi suoritetaan ympäristössä, joka tukee async/await-syntaksia tai käyttää Promises-pohjaista lähestymistapaa then()- ja catch()-metodien kanssa.
+User
+Nyt kun on käytössä asynkroninen speak-funktio, voisitko tehdä asynkronisen speakLetters-funktion, joka lukee järjestyksessä jokaisen wordContainerin spannin ja lopuksi koko wordContainerin tekstisisällön?
+ChatGPT
+
+Tietenkin! Voit luoda asynkronisen speakLetters-funktion, joka lukee järjestyksessä jokaisen wordContainer-elementin <span>-elementin ja lopuksi koko wordContainer-elementin tekstisisällön. Tässä on esimerkkikoodi, joka toteuttaa tämän:
+
+javascript
+
+async function speakLetters() {
+  var spans = wordContainer.querySelectorAll('span');
+
+  for (var i = 0; i < spans.length; i++) {
+    var span = spans[i];
+    var letter = span.textContent;
+
+    await speak(letter);
+  }
+
+  await speak(wordContainer.textContent);
+}
+
+Tässä speakLetters-funktiossa käytetään for-silmukkaa käymään läpi jokainen <span>-elementti wordContainer-elementissä. Jokainen kirjain luetaan käyttämällä speak-funktiota, joka on asynkroninen.
+
+await-avainsanaa käytetään odottamaan jokaisen kirjaimen lukemisen valmistumista ennen seuraavan kirjaimen lukemista. Tämä varmistaa, että kirjaimet luetaan järjestyksessä yksi kerrallaan.
+
+Lopuksi, speak(wordContainer.textContent)-käyttää speak-funktiota lukemaan koko wordContainer-elementin tekstisisällön.
+
+Voit kutsua speakLetters-funktiota tarpeen mukaan, esimerkiksi jossain tapahtumankäsittelijässä, jotta se lukee kirjaimet ja sanan asynkronisesti haluamallasi tavalla.
+
+Free Research Preview. ChatGPT may produce inaccurate information about people, places, or facts. ChatGPT May 24 Version
